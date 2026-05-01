@@ -1,0 +1,40 @@
+# Untracked outputs
+physionet.org/
+checkpoints/
+logs/
+results/
+paper/
+
+# Dev tooling
+.claude/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.worktrees/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environments / secrets
+.env
+.venv/
+venv/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.bak
+*~
