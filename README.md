@@ -49,6 +49,7 @@ This repository contains code to reproduce experiments in the paper.
   1. Register at https://physionet.org and complete the data use agreement.
   2. Download the Q-Pain v1.0.0 release into `physionet.org/files/q-pain/1.0.0/` relative to this repo's root.
   3. The Q-Pain scripts read CSVs from that path; without it, paraphrase and evaluation jobs will fail.
+- **DiscrimEval**: HuggingFace dataset `Anthropic/discrim-eval` ("explicit" config), fetched automatically.
 - **MedPerturb input CSVs**: shipped with this repo at `MedPerturb/data.csv` and `MedPerturb/data_with_baselines.csv`.
 
 ## Running experiments
@@ -115,6 +116,31 @@ python MedPerturb/scripts/sim_calibration_summary.py
 ```
 
 (Defaults of `plot_power_curves.py` are CWD-relative; pass explicit paths if you invoke it from elsewhere.)
+
+### MedPerturb — self-consistency control
+
+Repeated sampling (10 samples at T=0.7) of unchanged prompts, measuring the model's own output stochasticity as a reference level. The sbatch is a 4-way data-parallel array; submit from inside `MedPerturb/` and merge shards before analysis:
+
+```bash
+cd MedPerturb && sbatch slurm/run_main_experiment_sc.sbatch meta-llama/Llama-3.1-8B-Instruct
+
+python MedPerturb/case_studies/self_consistency_analysis.py \
+    --evaluation <merged_sc_json> \
+    --output MedPerturb/results/self_consistency.xlsx
+```
+
+`main_evaluate_sc.py` accepts `--temperature` (default 0.7); non-default temperatures tag the shard filenames (e.g., `_t1.5`).
+
+### DiscrimEval
+
+70 "Explicit" scenarios × 14 demographic contrasts, adjusted paraphrase baseline. The driver generates paraphrases once (OpenAI API), submits the eval as a SLURM array, merges shards, and runs the analysis:
+
+```bash
+bash scripts/auto_run_discrimeval.sh meta-llama/Llama-3.1-8B-Instruct 1
+bash scripts/auto_run_discrimeval.sh meta-llama/Llama-3.1-70B-Instruct 4
+```
+
+Outputs land at `results/discrimeval/discrimeval_analysis_<model>.xlsx` (per-contrast p-values + per-axis survival summary; a contrast "survives" if any of the five metrics reaches Bonferroni significance). `scripts/validate_discrimeval_preflight.py` checks the paraphrase file before long runs.
 
 ### Bias-in-Bios
 
